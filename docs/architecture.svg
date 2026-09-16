@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 780" font-family="'Inter','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="lyClient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity=".05"/>
+    </linearGradient>
+    <linearGradient id="lyOrch" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity=".06"/>
+    </linearGradient>
+    <linearGradient id="lyWork" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#34d399" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity=".05"/>
+    </linearGradient>
+    <linearGradient id="lyMcp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity=".05"/>
+    </linearGradient>
+    <linearGradient id="lySys" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f472b6" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#f472b6" stop-opacity=".05"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/>
+    </marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dy="2"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="780" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="40" y="46" fill="#e2e8f0" font-size="22" font-weight="700">E-Commerce Support Agent — Architecture</text>
+  <text x="40" y="68" fill="#94a3b8" font-size="13">Hybrid LLM + deterministic orchestration with policy, approval, and audit</text>
+
+  <!-- Layer bands -->
+  <g font-size="11" fill="#cbd5e1" font-weight="600" letter-spacing="1.5">
+    <rect x="24" y="96"  width="1232" height="86"  rx="14" fill="url(#lyClient)" stroke="#334155"/>
+    <text x="40" y="116">CLIENT</text>
+
+    <rect x="24" y="196" width="1232" height="110" rx="14" fill="url(#lyOrch)" stroke="#334155"/>
+    <text x="40" y="216">ORCHESTRATION</text>
+
+    <rect x="24" y="320" width="1232" height="150" rx="14" fill="url(#lyWork)" stroke="#334155"/>
+    <text x="40" y="340">WORKFLOWS &amp; CONTROLS</text>
+
+    <rect x="24" y="484" width="1232" height="110" rx="14" fill="url(#lyMcp)" stroke="#334155"/>
+    <text x="40" y="504">MCP ADAPTERS</text>
+
+    <rect x="24" y="608" width="1232" height="110" rx="14" fill="url(#lySys)" stroke="#334155"/>
+    <text x="40" y="628">BACKEND SYSTEMS</text>
+  </g>
+
+  <!-- Node style helper via reuse -->
+  <g filter="url(#soft)">
+    <!-- Client -->
+    <g>
+      <rect x="120" y="126" width="200" height="46" rx="10" fill="#0b1220" stroke="#38bdf8"/>
+      <text x="220" y="147" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">Customer</text>
+      <text x="220" y="163" text-anchor="middle" fill="#94a3b8" font-size="11">end user / agent</text>
+    </g>
+    <g>
+      <rect x="540" y="126" width="200" height="46" rx="10" fill="#0b1220" stroke="#38bdf8"/>
+      <text x="640" y="147" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">Web UI</text>
+      <text x="640" y="163" text-anchor="middle" fill="#94a3b8" font-size="11">chat + dashboard</text>
+    </g>
+    <g>
+      <rect x="960" y="126" width="200" height="46" rx="10" fill="#0b1220" stroke="#38bdf8"/>
+      <text x="1060" y="147" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">Flask API</text>
+      <text x="1060" y="163" text-anchor="middle" fill="#94a3b8" font-size="11">HTTP layer</text>
+    </g>
+
+    <!-- Orchestration -->
+    <g>
+      <rect x="440" y="230" width="400" height="60" rx="12" fill="#1e1b4b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="640" y="255" text-anchor="middle" fill="#e2e8f0" font-size="15" font-weight="700">Orchestrator Agent</text>
+      <text x="640" y="275" text-anchor="middle" fill="#c4b5fd" font-size="11">intent · routing · guardrails · injection guard</text>
+    </g>
+    <g>
+      <rect x="120" y="238" width="200" height="46" rx="10" fill="#0b1220" stroke="#a78bfa"/>
+      <text x="220" y="259" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">BytePlus LLM</text>
+      <text x="220" y="275" text-anchor="middle" fill="#94a3b8" font-size="11">dola-seed-2-1-turbo</text>
+    </g>
+    <g>
+      <rect x="960" y="238" width="200" height="46" rx="10" fill="#0b1220" stroke="#a78bfa"/>
+      <text x="1060" y="259" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">Policy Engine</text>
+      <text x="1060" y="275" text-anchor="middle" fill="#94a3b8" font-size="11">confidence + rules</text>
+    </g>
+
+    <!-- Workflows -->
+    <g>
+      <rect x="80" y="360" width="230" height="86" rx="12" fill="#022c22" stroke="#34d399"/>
+      <text x="195" y="386" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">FAQ / Cache</text>
+      <text x="195" y="406" text-anchor="middle" fill="#a7f3d0" font-size="11">static policy answers</text>
+      <text x="195" y="424" text-anchor="middle" fill="#94a3b8" font-size="10">read-only</text>
+    </g>
+    <g>
+      <rect x="360" y="360" width="230" height="86" rx="12" fill="#022c22" stroke="#34d399"/>
+      <text x="475" y="386" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Shipping Status</text>
+      <text x="475" y="406" text-anchor="middle" fill="#a7f3d0" font-size="11">reversible lookup workflow</text>
+      <text x="475" y="424" text-anchor="middle" fill="#94a3b8" font-size="10">read-only</text>
+    </g>
+    <g>
+      <rect x="640" y="360" width="230" height="86" rx="12" fill="#022c22" stroke="#34d399"/>
+      <text x="755" y="386" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Return / Refund</text>
+      <text x="755" y="406" text-anchor="middle" fill="#a7f3d0" font-size="11">end-to-end task workflow</text>
+      <text x="755" y="424" text-anchor="middle" fill="#94a3b8" font-size="10">irreversible · idempotent</text>
+    </g>
+    <g>
+      <rect x="920" y="360" width="140" height="86" rx="12" fill="#3b1d1d" stroke="#f87171"/>
+      <text x="990" y="392" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Human</text>
+      <text x="990" y="410" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Approval</text>
+      <text x="990" y="428" text-anchor="middle" fill="#fecaca" font-size="10">risk gate</text>
+    </g>
+    <g>
+      <rect x="1080" y="360" width="150" height="86" rx="12" fill="#1e293b" stroke="#60a5fa"/>
+      <text x="1155" y="386" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Audit + Store</text>
+      <text x="1155" y="406" text-anchor="middle" fill="#bfdbfe" font-size="10">steps · retries · resume</text>
+      <text x="1155" y="422" text-anchor="middle" fill="#94a3b8" font-size="10">idempotency keys</text>
+    </g>
+
+    <!-- MCP adapters -->
+    <g font-size="12" font-weight="600" fill="#e2e8f0">
+      <rect x="70"   y="514" width="170" height="56" rx="10" fill="#1c1917" stroke="#fbbf24"/><text x="155"  y="540" text-anchor="middle">Customer MCP</text><text x="155"  y="558" text-anchor="middle" fill="#fde68a" font-size="10">profile lookup</text>
+      <rect x="260"  y="514" width="170" height="56" rx="10" fill="#1c1917" stroke="#fbbf24"/><text x="345"  y="540" text-anchor="middle">Order MCP</text><text x="345"  y="558" text-anchor="middle" fill="#fde68a" font-size="10">status · items</text>
+      <rect x="450"  y="514" width="170" height="56" rx="10" fill="#1c1917" stroke="#fbbf24"/><text x="535"  y="540" text-anchor="middle">Product MCP</text><text x="535"  y="558" text-anchor="middle" fill="#fde68a" font-size="10">catalog · SKU</text>
+      <rect x="640"  y="514" width="170" height="56" rx="10" fill="#1c1917" stroke="#fbbf24"/><text x="725"  y="540" text-anchor="middle">Shipping MCP</text><text x="725"  y="558" text-anchor="middle" fill="#fde68a" font-size="10">tracking · labels</text>
+      <rect x="830"  y="514" width="170" height="56" rx="10" fill="#1c1917" stroke="#fbbf24"/><text x="915"  y="540" text-anchor="middle">Payment MCP</text><text x="915"  y="558" text-anchor="middle" fill="#fde68a" font-size="10">refunds</text>
+      <rect x="1020" y="514" width="170" height="56" rx="10" fill="#1c1917" stroke="#fbbf24"/><text x="1105" y="540" text-anchor="middle">Policy MCP</text><text x="1105" y="558" text-anchor="middle" fill="#fde68a" font-size="10">rules · docs</text>
+    </g>
+
+    <!-- Backend systems -->
+    <g font-size="12" fill="#e2e8f0">
+      <rect x="70"   y="638" width="170" height="56" rx="10" fill="#2a0f2a" stroke="#f472b6"/><text x="155"  y="663" text-anchor="middle" font-weight="600">Customer System</text><text x="155"  y="680" text-anchor="middle" fill="#fbcfe8" font-size="10">CRM</text>
+      <rect x="260"  y="638" width="170" height="56" rx="10" fill="#2a0f2a" stroke="#f472b6"/><text x="345"  y="663" text-anchor="middle" font-weight="600">Order System</text><text x="345"  y="680" text-anchor="middle" fill="#fbcfe8" font-size="10">OMS</text>
+      <rect x="450"  y="638" width="170" height="56" rx="10" fill="#2a0f2a" stroke="#f472b6"/><text x="535"  y="663" text-anchor="middle" font-weight="600">Product System</text><text x="535"  y="680" text-anchor="middle" fill="#fbcfe8" font-size="10">PIM</text>
+      <rect x="640"  y="638" width="170" height="56" rx="10" fill="#2a0f2a" stroke="#f472b6"/><text x="725"  y="663" text-anchor="middle" font-weight="600">Shipping System</text><text x="725"  y="680" text-anchor="middle" fill="#fbcfe8" font-size="10">3PL / carrier</text>
+      <rect x="830"  y="638" width="170" height="56" rx="10" fill="#2a0f2a" stroke="#f472b6"/><text x="915"  y="663" text-anchor="middle" font-weight="600">Payment System</text><text x="915"  y="680" text-anchor="middle" fill="#fbcfe8" font-size="10">PSP</text>
+      <rect x="1020" y="638" width="170" height="56" rx="10" fill="#2a0f2a" stroke="#f472b6"/><text x="1105" y="663" text-anchor="middle" font-weight="600">Policy Docs</text><text x="1105" y="680" text-anchor="middle" fill="#fbcfe8" font-size="10">FAQ · KB</text>
+    </g>
+  </g>
+
+  <!-- Connectors -->
+  <g fill="none" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arrow)">
+    <!-- client row -->
+    <path d="M320,149 L540,149"/>
+    <path d="M740,149 L960,149"/>
+    <!-- api to orchestrator -->
+    <path d="M1060,172 C1060,205 640,205 640,230" stroke="#a78bfa" marker-end="url(#arrowAccent)"/>
+    <!-- orchestrator to llm/policy -->
+    <path d="M440,260 L320,260"/>
+    <path d="M840,260 L960,260"/>
+    <!-- orchestrator to workflows -->
+    <path d="M540,290 C540,325 195,325 195,360"/>
+    <path d="M600,290 C600,330 475,330 475,360"/>
+    <path d="M680,290 C680,330 755,330 755,360"/>
+    <!-- returns to human & audit -->
+    <path d="M870,403 L920,403" stroke="#f87171" marker-end="url(#arrow)"/>
+    <path d="M990,360 C990,340 1155,340 1155,360" stroke="#60a5fa" marker-end="url(#arrow)"/>
+    <path d="M870,420 C900,455 1080,455 1080,446"/>
+    <!-- workflows to MCPs -->
+    <path d="M475,446 L345,514"/>
+    <path d="M755,446 L155,514"/>
+    <path d="M755,446 L345,514"/>
+    <path d="M755,446 L535,514"/>
+    <path d="M755,446 L725,514"/>
+    <path d="M755,446 L915,514"/>
+    <path d="M755,446 L1105,514"/>
+    <path d="M195,446 L1105,514"/>
+    <!-- MCPs to systems -->
+    <path d="M155,570 L155,638"/>
+    <path d="M345,570 L345,638"/>
+    <path d="M535,570 L535,638"/>
+    <path d="M725,570 L725,638"/>
+    <path d="M915,570 L915,638"/>
+    <path d="M1105,570 L1105,638"/>
+    <!-- audit back to UI -->
+    <path d="M1155,360 C1210,260 1210,180 1160,149" stroke="#60a5fa" stroke-dasharray="4 4"/>
+  </g>
+
+  <!-- Legend -->
+  <g font-size="11" fill="#cbd5e1">
+    <rect x="24" y="738" width="1232" height="30" rx="8" fill="#0b1220" stroke="#334155"/>
+    <circle cx="50"  cy="753" r="5" fill="#38bdf8"/><text x="62"  y="757">Client</text>
+    <circle cx="140" cy="753" r="5" fill="#a78bfa"/><text x="152" y="757">Orchestration</text>
+    <circle cx="260" cy="753" r="5" fill="#34d399"/><text x="272" y="757">Workflows</text>
+    <circle cx="370" cy="753" r="5" fill="#f87171"/><text x="382" y="757">Human gate</text>
+    <circle cx="480" cy="753" r="5" fill="#60a5fa"/><text x="492" y="757">Audit / durable state</text>
+    <circle cx="640" cy="753" r="5" fill="#fbbf24"/><text x="652" y="757">MCP adapters</text>
+    <circle cx="770" cy="753" r="5" fill="#f472b6"/><text x="782" y="757">Backend systems</text>
+    <text x="1100" y="757" fill="#94a3b8">→ solid: request  ⇢ dashed: audit feed</text>
+  </g>
+</svg>

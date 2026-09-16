@@ -2,6 +2,12 @@
 
 Standalone hybrid demo project for an electronics e-commerce customer support agent.
 
+## Architecture
+
+![Architecture](docs/architecture.svg)
+
+See [docs/solution-diagram.md](docs/solution-diagram.md) for the Mermaid source and a reading guide.
+
 ## Features
 
 - BytePlus LLM-assisted intent understanding and customer-facing response generation
