@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Commerce Support Agent Demo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --panel: #111827;
+        --panel-2: #1f2937;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --good: #22c55e;
+        --warn: #f59e0b;
+        --bad: #ef4444;
+        --border: #334155;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .title-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: start;
+        margin-bottom: 20px;
+      }
+
+      h1, h2, h3 {
+        margin: 0 0 8px 0;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(420px, 37%) minmax(760px, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+
+      .chat-column {
+        display: flex;
+        justify-content: flex-start;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .chat-panel {
+        width: 100%;
+        min-width: 0;
+        background: #dbeafe;
+        color: #0f172a;
+        border-color: #93c5fd;
+        box-shadow: inset 0 0 0 1px rgba(29, 78, 216, 0.08);
+      }
+
+      .chat-panel h2,
+      .chat-panel strong {
+        color: #0f172a;
+      }
+
+      .chat-panel .muted,
+      .chat-panel .catalog {
+        color: #334155;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .metric {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .metric .label {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+
+      .metric .value {
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .prompt-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0 16px 0;
+      }
+
+      button {
+        cursor: pointer;
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: var(--accent);
+        color: #082f49;
+        font-weight: 700;
+      }
+
+      button.secondary {
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .chat-panel button.secondary {
+        background: #eff6ff;
+        color: #0f172a;
+        border: 1px solid #93c5fd;
+      }
+
+      button.warn {
+        background: var(--warn);
+        color: #111827;
+      }
+
+      .chat-log {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 320px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+      }
+
+      .bubble {
+        max-width: 56%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        border: 1px solid transparent;
+      }
+
+      .bubble.user {
+        background: #14532d;
+        border-color: #1f7a45;
+        color: #f8fafc;
+        margin-left: auto;
+      }
+
+      .bubble.agent {
+        background: #1e293b;
+        border-color: #334155;
+        color: #f8fafc;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #111827;
+        color: var(--text);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .workflow-panel {
+        overflow-x: auto;
+      }
+
+      .workflow-table {
+        min-width: 760px;
+      }
+
+      .workflow-table th,
+      .workflow-table td {
+        white-space: nowrap;
+      }
+
+      .workflow-table td:last-child {
+        white-space: normal;
+        min-width: 220px;
+      }
+
+      th, td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .approval-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: var(--panel-2);
+      }
+
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #0f766e;
+        color: white;
+        font-size: 12px;
+      }
+
+      .error {
+        color: var(--bad);
+        margin-bottom: 10px;
+      }
+
+      .catalog {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 14px;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .error-box {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #1e293b;
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 1050px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .chat-panel {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .workflow-table {
+          min-width: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="title-row">
+        <div>
+          <h1>E-Commerce Support Agent Demo</h1>
+          <p class="muted">
+            Standalone hybrid demo with BytePlus LLM-assisted intent understanding
+            and response wording, plus deterministic policy checks, human gating,
+            audit trail, resumable workflows, retry limits, circuit-breaker state,
+            and idempotent mutations.
+          </p>
+        </div>
+        <button class="secondary" id="resetButton">Reset Demo</button>
+      </div>
+
+      <div class="metric-grid" id="metrics"></div>
+
+      <div class="grid">
+        <div class="chat-column">
+          <div class="panel chat-panel">
+            <h2>Customer Chat</h2>
+            <div class="prompt-list" id="examples"></div>
+            <div class="error" id="error"></div>
+            <div class="chat-log" id="chatLog"></div>
+            <div class="input-row">
+              <input
+                id="messageInput"
+                type="text"
+                placeholder="Ask about refund policy, shipping status, or returns"
+              />
+              <button id="sendButton">Send</button>
+            </div>
+            <div class="catalog" id="catalog"></div>
+          </div>
+        </div>
+
+        <div class="right-column">
+          <div class="panel">
+            <h2>Approval Queue</h2>
+            <div id="approvalQueue"></div>
+          </div>
+
+          <div class="panel workflow-panel">
+            <h2>Workflow Overview</h2>
+            <table class="workflow-table">
+              <thead>
+                <tr>
+                  <th>Workflow</th>
+                  <th>Intent</th>
+                  <th>Status</th>
+                  <th>Decision</th>
+                  <th>Confidence</th>
+                  <th>Order</th>
+                  <th>Last Step</th>
+                </tr>
+              </thead>
+              <tbody id="workflowTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top: 20px;">
+        <h2>Audit Trail</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Step ID</th>
+              <th>Workflow</th>
+              <th>Category</th>
+              <th>System</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Attempt</th>
+              <th>Summary</th>
+            </tr>
+          </thead>
+          <tbody id="auditTable"></tbody>
+        </table>
+      </div>
+
+      <div class="panel" style="margin-top: 20px;">
+        <h2>System Health</h2>
+        <div class="note" style="margin-bottom: 12px;">
+          Breaker <strong>closed</strong> means the system is healthy and requests are allowed to continue.
+          Breaker <strong>open</strong> means repeated failures caused the app to stop calling that system and fall back or hand off safely.
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>System</th>
+              <th>Breaker</th>
+              <th>Failures</th>
+            </tr>
+          </thead>
+          <tbody id="systemHealth"></tbody>
+        </table>
+      </div>
+
+      <div class="panel" style="margin-top: 20px;">
+        <h2>Last LLM Error</h2>
+        <div class="note">
+          Shows the most recent LLM failure captured by the app. This helps explain why the workflow used deterministic fallback.
+        </div>
+        <div class="error-box" id="lastLlmError">No LLM failures recorded.</div>
+      </div>
+    </div>
+
+    <script>
+      let currentSessionId = null;
+
+      async function postJSON(url, payload = {}) {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Request failed");
+        }
+        return data;
+      }
+
+      function renderMetrics(metrics) {
+        const metricRoot = document.getElementById("metrics");
+        const items = [
+          ["Success Rate", `${metrics.success_rate || 0}%`],
+          ["Total Workflows", metrics.total_workflows || 0],
+          ["Pending Approval", metrics.pending_approvals || 0],
+          ["Auto Approved", metrics.auto_approved || 0],
+          ["Human Approved", metrics.human_approved || 0],
+          ["LLM Enabled", metrics.llm_enabled || "No"],
+          ["LLM Calls", metrics.llm_calls || 0],
+          ["LLM Failures", metrics.llm_failures || 0],
+          ["FAQ Cache Hits", metrics.faq_cache_hits || 0],
+          ["Tool Retries", metrics.tool_retry_events || 0],
+          ["Human Handoffs", metrics.human_handoffs || 0],
+        ];
+        metricRoot.innerHTML = items
+          .map(
+            ([label, value]) => `
+              <div class="metric">
+                <div class="label">${label}</div>
+                <div class="value">${value}</div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderMessages(messages) {
+        const chat = document.getElementById("chatLog");
+        chat.innerHTML = messages
+          .map(
+            (message) => `
+              <div class="bubble ${message.role}">
+                ${escapeHtml(message.text)}
+              </div>
+            `
+          )
+          .join("");
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function renderExamples(examples) {
+        document.getElementById("examples").innerHTML = examples
+          .map(
+            (example) =>
+              `<button class="secondary example-button" data-example="${encodeURIComponent(example)}">${escapeHtml(example)}</button>`
+          )
+          .join("");
+      }
+
+      function renderCatalog(catalog) {
+        const customers = (catalog.customers || [])
+          .map((customer) => `${customer.name} (${customer.email})`)
+          .join("<br>");
+        const orders = (catalog.orders || [])
+          .map(
+            (order) =>
+              `${order.order_id}: ${order.status}, $${order.total_amount}, condition=${order.item_condition}`
+          )
+          .join("<br>");
+        document.getElementById("catalog").innerHTML = `
+          <strong>Mock customers</strong><br>${customers}<br><br>
+          <strong>Mock orders</strong><br>${orders}
+        `;
+      }
+
+      function renderApprovalQueue(items) {
+        const root = document.getElementById("approvalQueue");
+        if (!items.length) {
+          root.innerHTML = `<div class="muted">No workflows waiting for human approval.</div>`;
+          return;
+        }
+        root.innerHTML = items
+          .map((workflow) => {
+            const order = workflow.context?.order?.order_id || "n/a";
+            const reason = workflow.context?.evaluation?.reason || "manual review required";
+            return `
+              <div class="approval-card">
+                <div><strong>${workflow.workflow_id}</strong></div>
+                <div class="muted">${workflow.intent}</div>
+                <div style="margin-top: 8px;">Order: ${order}</div>
+                <div class="muted" style="margin-top: 4px;">${escapeHtml(reason)}</div>
+                <div class="row">
+                  <button onclick="decideWorkflow('${workflow.workflow_id}', 'approve')">Approve</button>
+                  <button class="warn" onclick="decideWorkflow('${workflow.workflow_id}', 'deny')">Deny</button>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderSystemHealth(health) {
+        const root = document.getElementById("systemHealth");
+        root.innerHTML = Object.entries(health)
+          .map(
+            ([name, details]) => `
+              <tr>
+                <td>${name}</td>
+                <td><span class="pill">${details.breaker_state}</span></td>
+                <td>${details.consecutive_failures}</td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function renderLastLlmError(metrics) {
+        const root = document.getElementById("lastLlmError");
+        root.textContent = metrics.last_llm_error || "No LLM failures recorded.";
+      }
+
+      function renderWorkflows(workflows) {
+        const root = document.getElementById("workflowTable");
+        root.innerHTML = workflows
+          .map((workflow) => {
+            const orderId = workflow.context?.order?.order_id || "";
+            const lastStep = workflow.steps?.length
+              ? workflow.steps[workflow.steps.length - 1].summary
+              : "";
+            return `
+              <tr>
+                <td>${workflow.workflow_id}</td>
+                <td>${workflow.intent}</td>
+                <td>${workflow.status}</td>
+                <td>${workflow.decision}</td>
+                <td>${workflow.confidence}</td>
+                <td>${orderId}</td>
+                <td>${escapeHtml(lastStep)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderAudit(auditLog) {
+        const root = document.getElementById("auditTable");
+        root.innerHTML = auditLog
+          .slice(0, 40)
+          .map(
+            (row) => `
+              <tr>
+                <td>${row.step_id}</td>
+                <td>${row.workflow_id}</td>
+                <td>${row.category}</td>
+                <td>${row.system}</td>
+                <td>${row.action}</td>
+                <td>${row.status}</td>
+                <td>${row.attempt}</td>
+                <td>${escapeHtml(row.summary)}</td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function renderState(state) {
+        currentSessionId = state.session?.session_id || currentSessionId;
+        renderMetrics(state.metrics || {});
+        renderMessages(state.messages || []);
+        renderExamples(state.examples || []);
+        renderCatalog(state.catalog || {});
+        renderApprovalQueue(state.pending_approvals || []);
+        renderSystemHealth(state.system_health || {});
+        renderLastLlmError(state.metrics || {});
+        renderWorkflows(state.workflows || []);
+        renderAudit(state.audit_log || []);
+        document.getElementById("error").textContent = "";
+      }
+
+      async function boot() {
+        const state = await postJSON("/api/session/create");
+        renderState(state);
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value.trim();
+        if (!message) {
+          return;
+        }
+        try {
+          const state = await postJSON("/api/message", {
+            session_id: currentSessionId,
+            message,
+          });
+          renderState(state);
+          input.value = "";
+        } catch (error) {
+          document.getElementById("error").textContent = error.message;
+        }
+      }
+
+      function selectExample(message) {
+        const input = document.getElementById("messageInput");
+        input.value = message;
+        input.focus();
+      }
+
+      async function decideWorkflow(workflowId, decision) {
+        try {
+          const state = await postJSON("/api/approval", {
+            workflow_id: workflowId,
+            decision,
+            approver: "demo-operator",
+          });
+          renderState(state);
+        } catch (error) {
+          document.getElementById("error").textContent = error.message;
+        }
+      }
+
+      async function resetDemo() {
+        const state = await postJSON("/api/reset");
+        renderState(state);
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+
+      document.getElementById("sendButton").addEventListener("click", sendMessage);
+      document.getElementById("resetButton").addEventListener("click", resetDemo);
+      document.getElementById("examples").addEventListener("click", (event) => {
+        const button = event.target.closest(".example-button");
+        if (!button) {
+          return;
+        }
+        const example = decodeURIComponent(button.dataset.example || "");
+        selectExample(example);
+      });
+      document.getElementById("messageInput").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      });
+
+      boot();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Commerce Support Agent Solution Diagram</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --border: #cbd5e1;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #1d4ed8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 30px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        cursor: pointer;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: var(--card);
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .primary {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      }
+
+      .diagram-note {
+        margin: 14px 0 0 0;
+        font-size: 14px;
+      }
+
+      .mermaid {
+        overflow-x: auto;
+      }
+
+      .legend {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .legend-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        background: #f8fafc;
+      }
+
+      .legend-card strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      @media print {
+        body {
+          background: white;
+        }
+
+        .page {
+          max-width: none;
+          padding: 0;
+        }
+
+        .actions {
+          display: none;
+        }
+
+        .panel {
+          border: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+      }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true,
+        },
+      });
+    </script>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <div>
+          <h1>E-Commerce Support Agent Solution Diagram</h1>
+          <p>
+            Left-to-right architecture view for the hybrid customer support demo.
+            Use the browser print dialog to save this page as PDF.
+          </p>
+        </div>
+        <div class="actions">
+          <button class="primary" onclick="window.print()">Save As PDF</button>
+          <button onclick="window.location.reload()">Refresh Diagram</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="mermaid">
+flowchart LR
+    customer[Customer / Support User]
+    ui[Web Demo UI<br/>Chat + Dashboard]
+    api[Flask App / API Layer]
+    orchestrator[Orchestrator Agent<br/>Intent + Routing + Guardrails]
+
+    faq[FAQ / Cache Path<br/>Static answers]
+    shipping[Shipping Status Path<br/>Reversible read workflow]
+    returns[Return / Refund Path<br/>Task workflow]
+
+    llm[BytePlus LLM<br/>dola-seed-2-1-turbo-260628<br/>thinking=disabled]
+    policy[Policy Engine<br/>Rules + confidence gate]
+    human[Human Approval Gate]
+    audit[Audit + Workflow Store<br/>steps, retries, idempotency, resume]
+
+    customerMcp[Customer MCP]
+    orderMcp[Order MCP]
+    productMcp[Product MCP]
+    shippingMcp[Shipping MCP]
+    paymentMcp[Payment MCP]
+    policyMcp[Policy MCP]
+
+    customerSys[(Customer System)]
+    orderSys[(Order System)]
+    productSys[(Product System)]
+    shippingSys[(Shipping System)]
+    paymentSys[(Payment System)]
+    policySys[(Policy Docs / FAQ)]
+
+    customer --> ui
+    ui --> api
+    api --> orchestrator
+
+    orchestrator --> llm
+    orchestrator --> faq
+    orchestrator --> shipping
+    orchestrator --> returns
+    orchestrator --> audit
+
+    faq --> policy
+    faq --> audit
+
+    shipping --> policy
+    shipping --> customerMcp
+    shipping --> orderMcp
+    shipping --> shippingMcp
+    shipping --> audit
+
+    returns --> policy
+    returns --> customerMcp
+    returns --> orderMcp
+    returns --> productMcp
+    returns --> shippingMcp
+    returns --> paymentMcp
+    returns --> policyMcp
+    returns --> human
+    returns --> audit
+
+    customerMcp --> customerSys
+    orderMcp --> orderSys
+    productMcp --> productSys
+    shippingMcp --> shippingSys
+    paymentMcp --> paymentSys
+    policyMcp --> policySys
+
+    policy --> human
+    policy --> audit
+    human --> returns
+    human --> audit
+    audit --> ui
+        </div>
+
+        <p class="diagram-note">
+          The orchestrator uses the LLM for intent understanding and reply wording,
+          while policy checks, MCP lookups, approval gating, idempotency, retries,
+          and auditability remain deterministic.
+        </p>
+      </div>
+
+      <div class="legend">
+        <div class="legend-card">
+          <strong>Front Door</strong>
+          Customer enters through the web UI, which calls the Flask API and then the orchestrator.
+        </div>
+        <div class="legend-card">
+          <strong>Hybrid Intelligence</strong>
+          BytePlus LLM handles understanding and wording; deterministic policy logic controls workflow execution.
+        </div>
+        <div class="legend-card">
+          <strong>MCP Isolation</strong>
+          Customer, order, product, shipping, payment, and policy are modeled as separate systems behind MCPs.
+        </div>
+        <div class="legend-card">
+          <strong>Safety Controls</strong>
+          Human approval, retries, idempotency, audit logging, and workflow resume protect irreversible actions.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+.env
+.venv/
+__pycache__/
+support_demo_state.json
+.DS_Store
