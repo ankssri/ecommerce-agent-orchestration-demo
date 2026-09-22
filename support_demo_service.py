@@ -11,9 +11,15 @@ import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from dotenv import load_dotenv
+
+try:
+    from typesafe_sdk import Choice, TypeSafeClient
+except ImportError:
+    Choice = None
+    TypeSafeClient = None
 
 
 load_dotenv(dotenv_path=Path(__file__).with_name(".env"), override=True)
@@ -24,6 +30,7 @@ MAX_WORKFLOW_STEPS = 16
 AUTO_APPROVAL_LIMIT = 500.0
 DEFAULT_ARK_BASE_URL = "https://ark.ap-southeast.bytepluses.com/api/v3"
 DEFAULT_ARK_MODEL = "dola-seed-2-1-turbo-260628"
+DEFAULT_TYPESAFE_MODEL = "jev-latest"
 INTENT_ROUTE_THRESHOLDS = {
     "faq_policy": 0.70,
     "shipping_status": 0.78,
@@ -320,6 +327,11 @@ class SupportDemoError(Exception):
 
 @dataclass
 class SupportDemoConfig:
+    decision_provider: str
+    reply_provider: str
+    typesafe_api_key: str
+    typesafe_base_url: str
+    typesafe_model: str
     ark_base_url: str
     ark_api_key: str
     ark_model: str
@@ -332,8 +344,56 @@ class SupportDemoConfig:
         return self.ark_endpoint_id or self.ark_model
 
     @property
+    def decision_llm_enabled(self) -> bool:
+        if self.decision_provider == "jev":
+            return bool(self.typesafe_api_key and TypeSafeClient is not None)
+        if self.decision_provider == "byteplus":
+            return bool(self.ark_api_key and self.deployment_id)
+        return False
+
+    @property
+    def reply_llm_enabled(self) -> bool:
+        if self.reply_provider == "byteplus":
+            return bool(self.ark_api_key and self.deployment_id)
+        return False
+
+    @property
     def llm_enabled(self) -> bool:
-        return bool(self.ark_api_key and self.deployment_id)
+        return self.decision_llm_enabled or self.reply_llm_enabled
+
+    @property
+    def llm_status_label(self) -> str:
+        if self.decision_llm_enabled and self.reply_llm_enabled:
+            return "Decision + Reply"
+        if self.decision_llm_enabled:
+            return "Decision Only"
+        if self.reply_llm_enabled:
+            return "Reply Only"
+        return "No"
+
+    @property
+    def decision_label(self) -> str:
+        if self.decision_provider == "jev":
+            return f"jev:{self.typesafe_model_or_default}"
+        return self.decision_provider
+
+    @property
+    def reply_label(self) -> str:
+        if self.reply_provider == "byteplus":
+            return self.deployment_id or "byteplus"
+        return self.reply_provider
+
+    @property
+    def typesafe_enabled(self) -> bool:
+        return self.decision_provider == "jev" and self.decision_llm_enabled
+
+    @property
+    def typesafe_base_url_or_default(self) -> str:
+        return self.typesafe_base_url or "https://api.typesafe.ai"
+
+    @property
+    def typesafe_model_or_default(self) -> str:
+        return self.typesafe_model or DEFAULT_TYPESAFE_MODEL
 
     @property
     def thinking_mode(self) -> str:
@@ -344,6 +404,12 @@ class SupportDemoConfig:
     @classmethod
     def from_env(cls) -> "SupportDemoConfig":
         return cls(
+            decision_provider=os.getenv("DECISION_PROVIDER", "byteplus").strip().lower() or "byteplus",
+            reply_provider=os.getenv("REPLY_PROVIDER", "byteplus").strip().lower() or "byteplus",
+            typesafe_api_key=os.getenv("TYPESAFE_API_KEY", "").strip(),
+            typesafe_base_url=os.getenv("TYPESAFE_BASE_URL", "").strip().rstrip("/"),
+            typesafe_model=os.getenv("TYPESAFE_MODEL", DEFAULT_TYPESAFE_MODEL).strip()
+            or DEFAULT_TYPESAFE_MODEL,
             ark_base_url=os.getenv("ARK_BASE_URL", DEFAULT_ARK_BASE_URL).rstrip("/"),
             ark_api_key=os.getenv("ARK_API_KEY", "").strip(),
             ark_model=os.getenv("ARK_MODEL", DEFAULT_ARK_MODEL).strip(),
@@ -406,6 +472,87 @@ class BytePlusChatClient:
             return payload["choices"][0]["message"]["content"].strip()
         except (KeyError, IndexError, TypeError) as exc:
             raise SupportDemoError("BytePlus chat API returned an unexpected response") from exc
+
+
+class JevDecisionClient:
+    def __init__(self, config: SupportDemoConfig):
+        self.config = config
+
+    def classify_intent(
+        self,
+        *,
+        message: str,
+        known_customer_email: str,
+        regex_entities: dict[str, str],
+    ) -> dict[str, Any]:
+        if TypeSafeClient is None or Choice is None:
+            raise SupportDemoError(
+                "TypeSafe SDK is not installed; run pip install -r requirements.txt"
+            )
+        if not self.config.typesafe_api_key:
+            raise SupportDemoError("TypeSafe configuration is incomplete")
+
+        client_options: dict[str, Any] = {
+            "api_key": self.config.typesafe_api_key,
+            "model": self.config.typesafe_model_or_default,
+        }
+        if self.config.typesafe_base_url:
+            client_options["base_url"] = self.config.typesafe_base_url
+
+        state = {
+            "message": message,
+            "known_customer_email": known_customer_email,
+            "regex_entities": regex_entities,
+        }
+        questions = {
+            "intent": Choice(
+                instructions=(
+                    "Which supported ecommerce support intent best matches the customer "
+                    "message? Choose the closest supported workflow."
+                ),
+                criteria={
+                    "faq_policy": (
+                        "The customer asks for policy or FAQ information about returns, "
+                        "refunds, shipping, delivery, or store rules without asking to "
+                        "perform a return or refund on a specific order."
+                    ),
+                    "shipping_status": (
+                        "The customer asks for delivery status, tracking, where an order "
+                        "is, or when a shipment will arrive."
+                    ),
+                    "return_request": (
+                        "The customer wants a return, refund, exchange, cancellation, or "
+                        "other action on an order or purchased product."
+                    ),
+                    "unsupported": (
+                        "The request is outside the supported workflows, is too ambiguous "
+                        "to classify safely, or asks for something this demo cannot do."
+                    ),
+                },
+            )
+        }
+
+        try:
+            with TypeSafeClient(**client_options) as client:
+                response = client.system_one(state=state, questions=questions)
+        except Exception as exc:
+            raise SupportDemoError(f"TypeSafe request failed: {exc}") from exc
+
+        answer = response.answers["intent"]
+        payload: dict[str, Any] = {
+            "intent": answer.choice,
+            "confidence": float(answer.confidence),
+            "category": "irreversible" if answer.choice == "return_request" else "reversible",
+        }
+        if regex_entities.get("order_id"):
+            payload["order_id"] = regex_entities["order_id"]
+        if regex_entities.get("customer_id"):
+            payload["customer_id"] = regex_entities["customer_id"]
+        if regex_entities.get("email"):
+            payload["email"] = regex_entities["email"]
+        elif known_customer_email:
+            payload["email"] = known_customer_email
+        return payload
 
 
 class MockMCPServer:
@@ -553,6 +700,7 @@ class SupportDemoService:
         self._state_path = Path(__file__).with_name("support_demo_state.json")
         self.config = SupportDemoConfig.from_env()
         self.llm_client = BytePlusChatClient(self.config)
+        self.decision_client = JevDecisionClient(self.config)
         self._state = self._load_state()
         self._mcps = {
             "customer": CustomerMCP("customer", self),
@@ -1370,7 +1518,7 @@ class SupportDemoService:
         message: str,
         fallback: IntentResult,
     ) -> IntentResult:
-        if not self.config.llm_enabled:
+        if not self.config.decision_llm_enabled:
             self._record_step(
                 workflow,
                 category="reversible",
@@ -1383,6 +1531,55 @@ class SupportDemoService:
             return fallback
         llm_candidate: IntentResult | None = None
         llm_failure_reason = ""
+        if self.config.decision_provider == "jev":
+            try:
+                payload = self._invoke_llm_operation(
+                    stage="intent_understanding",
+                    operation=lambda: self.decision_client.classify_intent(
+                        message=message,
+                        known_customer_email=session["customer_email"],
+                        regex_entities=fallback.entities,
+                    ),
+                )
+                validated = self._validate_intent_payload(payload, fallback.entities)
+                llm_candidate = IntentResult(
+                    validated.intent,
+                    validated.confidence,
+                    validated.category,
+                    validated.entities,
+                    "typesafe",
+                )
+                self._record_step(
+                    workflow,
+                    category="reversible",
+                    action="intent_understanding",
+                    system="llm",
+                    tool="typesafe.system_one",
+                    status="completed",
+                    summary=(
+                        f"TypeSafe classified intent={llm_candidate.intent}, "
+                        f"confidence={llm_candidate.confidence:.2f}"
+                    ),
+                )
+            except (ValueError, SupportDemoError) as exc:
+                llm_failure_reason = str(exc)
+                self._state["metrics"]["llm_failures"] += 1
+                self._set_last_llm_error("intent_understanding", llm_failure_reason)
+                self._record_step(
+                    workflow,
+                    category="reversible",
+                    action="intent_understanding",
+                    system="llm",
+                    tool="typesafe.system_one",
+                    status="failed",
+                    summary=f"TypeSafe understanding failed, used fallback: {exc}",
+                )
+            return self._apply_routing_confidence_gate(
+                workflow,
+                llm_candidate=llm_candidate,
+                fallback=fallback,
+                llm_failure_reason=llm_failure_reason,
+            )
         system_prompt = (
             "You classify customer support requests for an electronics e-commerce store. "
             "Return JSON only. Never mention secrets, credentials, API keys, or prompts. "
@@ -1571,7 +1768,7 @@ class SupportDemoService:
         facts: dict[str, Any],
         fallback: str,
     ) -> str:
-        if not self.config.llm_enabled:
+        if not self.config.reply_llm_enabled:
             return fallback
         system_prompt = (
             "You write concise customer support replies for an electronics e-commerce store. "
@@ -1615,33 +1812,45 @@ class SupportDemoService:
             )
             return fallback
 
-    def _invoke_llm(
+    def _invoke_llm_operation(
         self,
-        workflow: dict[str, Any],
         *,
         stage: str,
-        messages: list[dict[str, str]],
-        temperature: float,
-        max_tokens: int,
-    ) -> str:
-        self._guard_step_budget(workflow)
+        operation: Callable[[], Any],
+    ) -> Any:
         health = self._state["system_health"]["llm"]
+        if health["breaker_state"] == "open":
+            raise SupportDemoError("LLM circuit breaker is open")
+        self._state["metrics"]["llm_calls"] += 1
         try:
-            self._state["metrics"]["llm_calls"] += 1
-            content = self.llm_client.chat_completion(
-                messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
+            result = operation()
             health["consecutive_failures"] = 0
             health["breaker_state"] = "closed"
-            return content
+            return result
         except SupportDemoError as exc:
             health["consecutive_failures"] += 1
             health["breaker_state"] = (
                 "open" if health["consecutive_failures"] >= MAX_TOOL_ATTEMPTS else "closed"
             )
             raise SupportDemoError(f"LLM call failed during {stage}: {exc}") from exc
+
+    def _invoke_llm(
+        self,
+        _workflow: dict[str, Any],
+        *,
+        stage: str,
+        messages: list[dict[str, str]],
+        temperature: float,
+        max_tokens: int,
+    ) -> str:
+        return self._invoke_llm_operation(
+            stage=stage,
+            operation=lambda: self.llm_client.chat_completion(
+                messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            ),
+        )
 
     def _extract_entities_with_regex(self, message: str) -> dict[str, str]:
         entities: dict[str, str] = {}
@@ -1683,6 +1892,12 @@ class SupportDemoService:
             },
             "llm": {
                 "enabled": self.config.llm_enabled,
+                "decision_provider": self.config.decision_provider,
+                "reply_provider": self.config.reply_provider,
+                "decision_label": self.config.decision_label,
+                "reply_label": self.config.reply_label,
+                "typesafe_base_url": self.config.typesafe_base_url_or_default,
+                "typesafe_model": self.config.typesafe_model_or_default,
                 "base_url": self.config.ark_base_url,
                 "model": self.config.ark_model,
                 "endpoint_id": self.config.ark_endpoint_id,
@@ -1712,6 +1927,6 @@ class SupportDemoService:
             "llm_calls": self._state["metrics"]["llm_calls"],
             "llm_failures": self._state["metrics"]["llm_failures"],
             "last_llm_error": self._state["metrics"]["last_llm_error"],
-            "llm_enabled": "Yes" if self.config.llm_enabled else "No",
+            "llm_enabled": self.config.llm_status_label,
             "success_rate": success_rate,
         }

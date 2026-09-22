@@ -10,7 +10,7 @@ See [docs/solution-diagram.md](docs/solution-diagram.md) for the Mermaid source 
 
 ## Features
 
-- BytePlus LLM-assisted intent understanding and customer-facing response generation
+- Configurable LLM-assisted support flow with Jev for intent decisions and BytePlus chat for customer-facing response generation
 - Deterministic orchestrator routes user requests to FAQ, shipping-status, or return/refund workflows
 - Mocked MCP-style systems for customer, product, order, shipping, payment, and policy
 - Reversible read-only actions separated from irreversible mutations
@@ -25,6 +25,12 @@ See [docs/solution-diagram.md](docs/solution-diagram.md) for the Mermaid source 
 Create and fill `.env`:
 
 ```env
+DECISION_PROVIDER=jev
+REPLY_PROVIDER=byteplus
+
+TYPESAFE_API_KEY=your_typesafe_api_key
+TYPESAFE_MODEL=jev-latest
+
 ARK_BASE_URL=https://ark.ap-southeast.bytepluses.com/api/v3
 ARK_API_KEY=your_byteplus_api_key
 ARK_ENDPOINT_ID=your_endpoint_id
@@ -36,10 +42,13 @@ ARK_TIMEOUT_SECONDS=60
 Notes:
 
 - `.env` is ignored by git.
-- The app prefers `ARK_ENDPOINT_ID` when provided.
+- The Jev path is used only for intent classification when `DECISION_PROVIDER=jev`.
+- Customer-facing reply generation stays on the BytePlus chat path when `REPLY_PROVIDER=byteplus`.
+- The app prefers `ARK_ENDPOINT_ID` when provided for the BytePlus reply model.
 - If `ARK_ENDPOINT_ID` is empty, it falls back to `ARK_MODEL`.
 - `ARK_THINKING_MODE=disabled` is recommended for this demo to reduce latency.
-- The LLM never receives the API key in prompts. Credentials are used only in the HTTP authorization header.
+- Neither TypeSafe nor BytePlus credentials are ever included in prompts, workflow state, or UI payloads.
+- Do not commit `.env`; keep provider keys only in local environment configuration.
 
 ## Run
 
